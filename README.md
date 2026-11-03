@@ -4,6 +4,8 @@ Aplikasi fullstack untuk mengelola produk, pelanggan, dan transaksi penjualan. S
 
 > Proyek ini berawal dari sebuah studi kasus online shop, lalu saya kembangkan lebih lanjut sebagai proyek portofolio.
 
+![CI](https://github.com/rasyied24/online-shop-order-management/actions/workflows/ci.yml/badge.svg)
+
 ## Fitur utama
 
 - Login dengan token, rute terproteksi, dan penanganan token kedaluwarsa
@@ -210,7 +212,7 @@ Semua endpoint selain login membutuhkan header `Authorization: Bearer <token>`.
 
 ## Rencana pengembangan
 
-- [ ] GitHub Actions untuk lint, build, dan test pada setiap push
+- [x] GitHub Actions untuk lint, build, dan test pada setiap push
 - [ ] Test race condition paralel untuk pembuatan order, test rollback nomor invoice, dan idempotency key pada `POST /orders`
 - [ ] `docker compose` untuk menjalankan seluruh aplikasi dengan satu perintah
 - [ ] Test frontend: Vitest untuk helper murni (format Rupiah/tanggal, hitung order, pemetaan error server) dan Playwright untuk alur login sampai buat order
