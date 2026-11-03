@@ -1,20 +1,20 @@
-name: CI
+name: CI                          # nama workflow (tampil di tab Actions)
 
-on:
+on:                               # KAPAN dijalankan
   push:
-    branches: [main]
-  pull_request:
+    branches: [main]              # setiap push ke branch main
+  pull_request:                   # dan setiap pull request
 
-jobs:
+jobs:                             # daftar pekerjaan; backend dan frontend jalan PARALEL
   backend:
     name: Backend (Pint + PHPUnit)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest        # mesin Ubuntu baru dan kosong
     defaults:
       run:
-        working-directory: backend
+        working-directory: backend    # semua perintah `run` dijalankan di folder backend
 
     services:
-      postgres:
+      postgres:                   # menyalakan database PostgreSQL di samping job
         image: postgres:16
         env:
           POSTGRES_USER: postgres
@@ -22,13 +22,13 @@ jobs:
           POSTGRES_DB: azatech_shop_test
         ports:
           - 5432:5432
-        options: >-
+        options: >-               # tunggu sampai database benar-benar siap menerima koneksi
           --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
 
-    env:
+    env:                          # variabel lingkungan yang dibaca Laravel
       DB_CONNECTION: pgsql
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
@@ -37,9 +37,9 @@ jobs:
       DB_PASSWORD: postgres
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4          # ambil kode dari GitHub (hanya yang ter-commit)
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@v2    # pasang PHP 8.4 dan ekstensinya
         with:
           php-version: '8.4'
           extensions: mbstring, pdo_pgsql, pgsql
@@ -53,13 +53,13 @@ jobs:
         run: cp .env.example .env && php artisan key:generate
 
       - name: Code style (Pint)
-        run: ./vendor/bin/pint --test
+        run: ./vendor/bin/pint --test      # gagal kalau ada kode yang gayanya tidak rapi
 
       - name: Run tests
         run: php artisan test
 
   frontend:
-    name: Frontend (lint + build)
+    name: Frontend (lint + test + build)   # ← ditambah "test"
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -75,10 +75,13 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci                        # pasang persis sesuai package-lock.json
 
       - name: Lint
         run: npm run lint
+
+      - name: Test                         # ← TAMBAHKAN setelah Vitest terpasang
+        run: npm test
 
       - name: Build
         run: npm run build
