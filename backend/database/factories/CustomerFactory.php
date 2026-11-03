@@ -19,7 +19,7 @@ class CustomerFactory extends Factory
     {
         return [
             'customer_name' => fake()->name(),
-            'customer_address' => fake()->streetAddress() . ', ' . fake()->city(),
+            'customer_address' => fake()->streetAddress().', '.fake()->city(),
             'gender' => fake()->randomElement(['Pria', 'Wanita']),
             'birth_date' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
             'phone' => fake()->numerify('08##########'),

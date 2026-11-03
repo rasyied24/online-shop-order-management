@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
-    
+
     protected $fillable = ['product_code', 'product_name', 'stock', 'price'];
+
     protected function casts(): array
     {
         return ['stock' => 'integer', 'price' => 'decimal:2'];
@@ -25,11 +26,11 @@ class Product extends Model
             return $query;
         }
 
-        $like = '%' . addcslashes($term, '%_\\') . '%';
+        $like = '%'.addcslashes($term, '%_\\').'%';
 
         return $query->where(function (Builder $q) use ($like) {
             $q->where('product_name', 'ilike', $like)
-            ->orWhere('product_code', 'ilike', $like);
+                ->orWhere('product_code', 'ilike', $like);
         });
     }
 

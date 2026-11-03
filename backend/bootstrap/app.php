@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\InsufficientStockException;
 use App\Support\ApiResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -10,7 +11,6 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use App\Exceptions\InsufficientStockException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
