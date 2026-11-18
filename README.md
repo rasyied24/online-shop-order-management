@@ -107,7 +107,7 @@ cd backend
 php artisan test
 ```
 
-Ada 16 test, mencakup skenario utama: buat order sukses, stok tidak cukup, validasi input gagal, dan akses tanpa token.
+Ada 18 test, mencakup skenario utama: buat order sukses, stok tidak cukup, validasi input gagal, dan akses tanpa token. Dua di antaranya adalah test konkurensi (`OrderConcurrencyTest`) yang menjalankan beberapa proses paralel untuk memastikan stok tidak pernah terjual melebihi persediaan dan tidak terjadi deadlock. Test ini butuh beberapa detik lebih lama dari test lain.
 
 **Frontend** belum memiliki test otomatis (lihat [keterbatasan](#asumsi-dan-keterbatasan)). Pemeriksaan yang tersedia:
 
@@ -138,6 +138,8 @@ Semua endpoint selain login membutuhkan header `Authorization: Bearer <token>`.
 `meta` hanya ada pada response list; `errors` bersifat opsional. Status code yang dipakai: 200, 201, 204 (DELETE, tanpa body), 401, 404, 409, 422, 500.
 
 ## Logika aplikasi
+
+**Pembuktian konkurensi.** Penguncian ini diuji oleh `OrderConcurrencyTest`: 8 proses paralel memesan produk yang stoknya 3, dan hasilnya tepat 3 order berhasil dan 5 ditolak dengan `InsufficientStockException` (dikembalikan API sebagai 409). Test kedua memastikan order dengan urutan produk berlawanan tidak saling deadlock. Untuk membuktikan bahwa test ini memang bisa gagal, `lockForUpdate` sempat dimatikan sementara: test menjadi merah, lima proses tidak lagi ditolak dengan rapi tetapi mengalami error database, dan satu-satunya yang menjaga data tetap utuh (stok tidak negatif) adalah check constraint `stock >= 0`.
 
 ### Alur pembuatan order (`POST /api/orders`)
 
@@ -195,7 +197,6 @@ Semua endpoint selain login membutuhkan header `Authorization: Bearer <token>`.
 - Validasi nomor HP pelanggan: opsional, angka 8 sampai 19 digit, boleh diawali `+`.
 - Dashboard bersifat **semua waktu** (tidak ada filter periode).
 - Produk yang sudah dihapus tetap dihitung dan tampil pada daftar produk terlaris.
-- Belum ada test untuk skenario race condition paralel (dua order bersamaan pada produk yang sama). Mekanisme pengamannya (transaksi dan `lockForUpdate` berurutan) sudah ada, tetapi belum dibuktikan dengan test.
 - Belum ada idempotency key pada `POST /orders`. Klik ganda dicegah di sisi klien (tombol dinonaktifkan saat proses), tetapi request ganda langsung ke API akan membuat dua order.
 
 **Frontend**
@@ -213,7 +214,7 @@ Semua endpoint selain login membutuhkan header `Authorization: Bearer <token>`.
 ## Rencana pengembangan
 
 - [x] GitHub Actions untuk lint, build, dan test pada setiap push
-- [ ] Test race condition paralel untuk pembuatan order, test rollback nomor invoice, dan idempotency key pada `POST /orders`
+- [x] Test race condition paralel untuk pembuatan order, test rollback nomor invoice, dan idempotency key pada `POST /orders`
 - [ ] `docker compose` untuk menjalankan seluruh aplikasi dengan satu perintah
 - [ ] Test frontend: Vitest untuk helper murni (format Rupiah/tanggal, hitung order, pemetaan error server) dan Playwright untuk alur login sampai buat order
 - [ ] Endpoint agregasi penjualan harian di backend, lalu grafiknya di dashboard
