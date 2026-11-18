@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Actions\CreateOrderAction;
 use App\Models\Customer;
 use App\Models\Product;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class OrderTest extends TestCase
@@ -169,6 +172,32 @@ class OrderTest extends TestCase
 
         $this->assertSame('INV-20261027-0001', $first->json('data.order_number'));
         $this->assertSame('INV-20261027-0002', $second->json('data.order_number'));
+    }
+
+    public function test_invoice_number_is_not_consumed_when_order_fails_after_number_is_taken(): void
+    {
+        $user = $this->actingAsUser();
+        $this->travelTo(Carbon::parse('2026-10-27 10:00:00'));
+
+        $customer = Customer::factory()->create();
+        $product = Product::factory()->create(['stock' => 10]);
+        $items = [['product_id' => $product->id, 'quantity' => 1]];
+        $action = app(CreateOrderAction::class);
+
+        try {
+            // Customer tidak ada: gagal di foreign key, SETELAH nomor invoice diambil.
+            $action->execute($user, (string) Str::uuid(), $items);
+            $this->fail('Seharusnya gagal');
+        } catch (QueryException) {
+            // diharapkan
+        }
+
+        $this->assertDatabaseCount('order_sequences', 0);   // kenaikan nomor ikut dibatalkan
+        $this->assertDatabaseCount('orders', 0);
+        $this->assertSame(10, $product->fresh()->stock);
+
+        $order = $action->execute($user, $customer->id, $items);
+        $this->assertSame('INV-20261027-0001', $order->order_number);   // tetap 0001, tidak loncat
     }
 
     public function test_it_requires_authentication(): void
